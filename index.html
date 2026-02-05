@@ -243,14 +243,27 @@ const iconPlanned = makeShopIcon({ bg: "#FF000000", planned: true });
     const markers = [];
     const bounds = [];
 
-    branches.forEach(b => {
-      const marker = L.marker([b.lat, b.lng], { icon: pickIcon(b) })
-        .addTo(map)
-        .bindPopup(makePopup(b));
+branches.forEach(b => {
+  const icon = pickIcon(b);
+  const popup = makePopup(b);
 
-      markers.push({ b, marker });
-      bounds.push([b.lat, b.lng]);
-    });
+  const marker = L.marker([b.lat, b.lng], { icon })
+    .addTo(map)
+    .bindPopup(popup);
+
+  // label vedle ikonky
+  const stateClass = b.planned ? "plan" : (isOpenNow(b.hours).state); // "open" | "closed"
+  marker.bindTooltip(b.city || b.name, {
+    permanent: true,
+    direction: "right",
+    offset: [14, 0],
+    className: `branch-label ${stateClass}`
+  });
+
+  markers.push({ b, marker });
+  bounds.push([b.lat, b.lng]);
+});
+
 
     if (bounds.length) map.fitBounds(bounds, { padding: [30, 30] });
 
