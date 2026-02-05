@@ -27,6 +27,23 @@
     .dot.closed { background:#9ca3af; }
     .dot.plan { background:#6b7280; outline: 2px dashed rgba(0,0,0,.25); outline-offset: 2px; }
     a { color: #0b57d0; }
+  .branch-label{
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 10px;
+  padding: 4px 8px;
+  font: 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  box-shadow: 0 6px 18px rgba(0,0,0,.12);
+  white-space: nowrap;
+}
+.branch-label.open   { border-color: rgba(34,197,94,.35); }
+.branch-label.closed { border-color: rgba(148,163,184,.50); }
+.branch-label.plan   { border-style: dashed; border-color: rgba(107,114,128,.45); }
+
+.leaflet-tooltip.branch-label:before{
+  border-right-color: rgba(255,255,255,.92);
+}
+
   </style>
 </head>
 
@@ -49,6 +66,7 @@
     const branches = [
       {
         name: "Prodejna Trutnov",
+        city: "Trutnov",
         addr: "Palackého 78, 541 01 Trutnov",
         url: BASE_URL + "trutnov",
         lat: 50.56075379808682, lng: 15.911718414822795,
@@ -56,6 +74,7 @@
       },
       {
         name: "Prodejna Náchod",
+        city: "Náchod",
         addr: "Náchod (střed) – plánuje se",
         url: BASE_URL + "nachod",
         lat: 50.4167, lng: 16.1629, // střed města
@@ -63,6 +82,7 @@
       },
       {
         name: "Prodejna Hradec Králové",
+        city: "Hradec Králové",
         addr: "Gočárova tř. 312/52, 500 02 Hradec Králové",
         url: BASE_URL + "hradec-kralove",
         lat: 50.21197053673083, lng: 15.810996169139326,
@@ -70,6 +90,7 @@
       },
       {
         name: "Prodejna Pardubice",
+        city: "Pardubice",
         addr: "J. Palacha 1253, 530 02 Pardubice",
         url: BASE_URL + "pardubice",
         lat: 50.02578872364449, lng: 15.770669997737803,
@@ -77,6 +98,7 @@
       },
       {
         name: "Prodejna Chrudim",
+        city: "Chrudim",
         addr: "Resselovo nám. 2, 537 01 Chrudim",
         url: BASE_URL + "chrudim",
         lat: 49.95178201451212, lng: 15.794964737952599,
