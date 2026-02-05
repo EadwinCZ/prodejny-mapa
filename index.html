@@ -117,4 +117,100 @@
     }
 
     function isOpenNow(hoursByDay) {
-      if (!hoursByDay) return { state:
+      if (!hoursByDay) return { state: "closed", note: "Bez otevíračky" };
+
+      const { hh, mm, wd } = nowInPragueParts();
+      const today = hoursByDay[wd];
+      if (!today || today === "closed") return { state: "closed", note: "Dnes zavřeno" };
+
+      const [openS, closeS] = today.split("-").map(s => s.trim());
+      const [oh, om] = openS.split(":").map(Number);
+      const [ch, cm] = closeS.split(":").map(Number);
+
+      const now = hh * 60 + mm;
+      const open = oh * 60 + om;
+      const close = ch * 60 + cm;
+
+      // (kdybys někdy měl otevíračku přes půlnoc, je tu podpora)
+      const openNow = (open <= close) ? (now >= open && now <= close) : (now >= open || now <= close);
+      return { state: openNow ? "open" : "closed", note: today };
+    }
+
+    // ====== IKONKY ======
+    const iconOpen = L.divIcon({
+      className: "",
+      html: '<div style="width:14px;height:14px;border-radius:50%;background:#22c55e;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.25)"></div>',
+      iconSize: [14,14], iconAnchor: [7,7]
+    });
+    const iconClosed = L.divIcon({
+      className: "",
+      html: '<div style="width:14px;height:14px;border-radius:50%;background:#9ca3af;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.25)"></div>',
+      iconSize: [14,14], iconAnchor: [7,7]
+    });
+    const iconPlanned = L.divIcon({
+      className: "",
+      html: '<div style="width:14px;height:14px;border-radius:50%;background:#6b7280;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.25); outline:2px dashed rgba(0,0,0,.25); outline-offset:2px"></div>',
+      iconSize: [14,14], iconAnchor: [7,7]
+    });
+
+    function makePopup(b) {
+      if (b.planned) {
+        return `
+          <strong>${b.name}</strong><br/>
+          ${b.addr}<br/>
+          <span class="badge plan">Plánuje se</span><br/>
+          <a href="${b.url}" target="_blank" rel="noopener">Více informací</a>
+        `;
+      }
+
+      const st = isOpenNow(b.hours);
+      const badge = st.state === "open"
+        ? '<span class="badge open">Otevřeno</span>'
+        : '<span class="badge closed">Zavřeno</span>';
+
+      return `
+        <strong>${b.name}</strong><br/>
+        ${b.addr}<br/>
+        ${badge} <span style="font-size:12px;color:#555">(${st.note})</span><br/>
+        <a href="${b.url}" target="_blank" rel="noopener">Více informací</a>
+      `;
+    }
+
+    function pickIcon(b) {
+      if (b.planned) return iconPlanned;
+      const st = isOpenNow(b.hours);
+      return (st.state === "open") ? iconOpen : iconClosed;
+    }
+
+    // ====== MAPA ======
+    const map = L.map("map", { scrollWheelZoom: false }).setView([49.8175, 15.4730], 7);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap"
+    }).addTo(map);
+
+    const markers = [];
+    const bounds = [];
+
+    branches.forEach(b => {
+      const marker = L.marker([b.lat, b.lng], { icon: pickIcon(b) })
+        .addTo(map)
+        .bindPopup(makePopup(b));
+
+      markers.push({ b, marker });
+      bounds.push([b.lat, b.lng]);
+    });
+
+    if (bounds.length) map.fitBounds(bounds, { padding: [30, 30] });
+
+    // Přepočet stavů (otevřeno/zavřeno) každou minutu
+    setInterval(() => {
+      markers.forEach(({ b, marker }) => {
+        marker.setIcon(pickIcon(b));
+        marker.setPopupContent(makePopup(b));
+      });
+    }, 60 * 1000);
+  </script>
+</body>
+</html>
