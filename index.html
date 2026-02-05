@@ -166,14 +166,19 @@ const SHOP_SVG = `
   <path d="M12 22s7-6.1 7-12a7 7 0 10-14 0c0 5.9 7 12 7 12z"
         fill="white" fill-opacity="0.96"/>
   <!-- vnitřní tečka -->
-  <circle cx="12" cy="10" r="2.4" fill="white" fill-opacity="0.96"/>
+    <circle cx="12" cy="10" r="2.4" fill="currentColor" fill-opacity="0.96"/>
 </svg>
 `.trim();
 
 function makeShopIcon({ bg, planned=false }) {
-  const size = 44;          // velikost celého markeru
-  const inner = 26;         // velikost ikonky uvnitř
-  const dash = planned ? "outline:2px dashed rgba(0,0,0,.28); outline-offset:2px;" : "";
+  const size = 44;
+  const inner = 26;
+
+  const iconColor = planned ? "#000000" : "#ffffff"; // ← TADY SE TO LÁME
+
+  const dash = planned
+    ? "outline:2px dashed rgba(0,0,0,.28); outline-offset:2px;"
+    : "";
 
   return L.divIcon({
     className: "",
@@ -186,7 +191,10 @@ function makeShopIcon({ bg, planned=false }) {
         box-shadow:0 8px 22px rgba(0,0,0,.20);
         ${dash}
       ">
-        <div style="width:${inner}px;height:${inner}px">
+        <div style="
+          width:${inner}px;height:${inner}px;
+          color:${iconColor};
+        ">
           ${SHOP_SVG}
         </div>
       </div>
@@ -196,6 +204,7 @@ function makeShopIcon({ bg, planned=false }) {
     popupAnchor: [0, -size/2]
   });
 }
+
 
 // Definice ikon pro stavy
 const iconOpen   = makeShopIcon({ bg: "#22c55e" });
