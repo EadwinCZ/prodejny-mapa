@@ -3,29 +3,118 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Mapa ČR (Leaflet)</title>
+  <title>Pobočky – mapa</title>
 
-  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     html, body { height: 100%; margin: 0; }
     #map { height: 100vh; }
+
+    .badge { display:inline-block; padding:.15rem .5rem; border-radius:999px; font-size:12px; }
+    .open   { background:#d7f5e3; }
+    .closed { background:#f1f1f1; }
+    .plan   { background:#e5e7eb; }
+
+    .legend {
+      position: absolute; z-index: 1000; right: 12px; top: 12px;
+      background: rgba(255,255,255,.92); border-radius: 12px;
+      padding: 10px 12px; font: 14px/1.3 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      box-shadow: 0 4px 18px rgba(0,0,0,.12);
+    }
+    .legend .row { display:flex; align-items:center; gap:8px; margin:6px 0; }
+    .dot { width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+    .dot.open { background:#22c55e; }
+    .dot.closed { background:#9ca3af; }
+    .dot.plan { background:#6b7280; outline: 2px dashed rgba(0,0,0,.25); outline-offset: 2px; }
+    a { color: #0b57d0; }
   </style>
 </head>
+
 <body>
   <div id="map"></div>
 
-  <!-- Leaflet JS -->
+  <div class="legend">
+    <strong>Pobočky</strong>
+    <div class="row"><span class="dot open"></span> Otevřeno</div>
+    <div class="row"><span class="dot closed"></span> Zavřeno</div>
+    <div class="row"><span class="dot plan"></span> Plánuje se</div>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // Střed ČR + zoom tak, aby byla vidět celá republika
-    const map = L.map('map', { scrollWheelZoom: false }).setView([49.8175, 15.4730], 7);
+    // ====== DATA POBOČEK ======
+    // URL podle tvého zadání: plodyzeme.cz/#město (používám slug bez diakritiky)
+    const BASE_URL = "https://plodyzeme.cz/#";
 
-    // OpenStreetMap dlaždice
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
-  </script>
-</body>
-</html>
+    const branches = [
+      {
+        name: "Prodejna Trutnov",
+        addr: "Palackého 78, 541 01 Trutnov",
+        url: BASE_URL + "trutnov",
+        lat: 50.56075379808682, lng: 15.911718414822795,
+        hours: { po:"10:00-18:00", ut:"10:00-18:00", st:"10:00-18:00", ct:"10:00-18:00", pa:"10:00-18:00", so:"closed", ne:"closed" }
+      },
+      {
+        name: "Prodejna Náchod",
+        addr: "Náchod (střed) – plánuje se",
+        url: BASE_URL + "nachod",
+        lat: 50.4167, lng: 16.1629, // střed města
+        planned: true
+      },
+      {
+        name: "Prodejna Hradec Králové",
+        addr: "Gočárova tř. 312/52, 500 02 Hradec Králové",
+        url: BASE_URL + "hradec-kralove",
+        lat: 50.21197053673083, lng: 15.810996169139326,
+        hours: { po:"11:00-19:00", ut:"11:00-19:00", st:"11:00-19:00", ct:"11:00-19:00", pa:"11:00-19:00", so:"closed", ne:"closed" }
+      },
+      {
+        name: "Prodejna Pardubice",
+        addr: "J. Palacha 1253, 530 02 Pardubice",
+        url: BASE_URL + "pardubice",
+        lat: 50.02578872364449, lng: 15.770669997737803,
+        hours: { po:"11:00-19:00", ut:"11:00-19:00", st:"11:00-19:00", ct:"11:00-19:00", pa:"11:00-19:00", so:"closed", ne:"closed" }
+      },
+      {
+        name: "Prodejna Chrudim",
+        addr: "Resselovo nám. 2, 537 01 Chrudim",
+        url: BASE_URL + "chrudim",
+        lat: 49.95178201451212, lng: 15.794964737952599,
+        hours: { po:"10:00-18:00", ut:"10:00-18:00", st:"10:00-18:00", ct:"10:00-18:00", pa:"10:00-18:00", so:"closed", ne:"closed" }
+      }
+    ];
+
+    // ====== ČAS V EUROPE/PRAGUE ======
+    const weekdayKey = (wdShort) => {
+      // Intl cs-CZ vrací např. "po", "út", "st", "čt", "pá", "so", "ne"
+      // pro jistotu normalizace bez teček a do lowercase
+      const s = (wdShort || "").toLowerCase().replace(".", "");
+      if (s.startsWith("po")) return "po";
+      if (s.startsWith("út") || s.startsWith("ut")) return "ut";
+      if (s.startsWith("st")) return "st";
+      if (s.startsWith("čt") || s.startsWith("ct")) return "ct";
+      if (s.startsWith("pá") || s.startsWith("pa")) return "pa";
+      if (s.startsWith("so")) return "so";
+      if (s.startsWith("ne")) return "ne";
+      return "po";
+    };
+
+    function nowInPragueParts() {
+      const parts = new Intl.DateTimeFormat("cs-CZ", {
+        timeZone: "Europe/Prague",
+        hour: "2-digit",
+        minute: "2-digit",
+        weekday: "short",
+        hour12: false
+      }).formatToParts(new Date());
+
+      const get = (t) => parts.find(p => p.type === t)?.value;
+      return {
+        hh: Number(get("hour")),
+        mm: Number(get("minute")),
+        wd: weekdayKey(get("weekday"))
+      };
+    }
+
+    function isOpenNow(hoursByDay) {
+      if (!hoursByDay) return { state:
