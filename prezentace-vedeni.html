@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jak přestat ztrácet úkoly v chatu · Prezentace pro vedení</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&family=Epilogue:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #F7F6F1;
+  --ink: #16140D;
+  --muted: #8A8678;
+  --border: #E2DDD4;
+  --surface: #FFFFFF;
+  --v1: #1B4FD8;
+  --v1-bg: #EEF2FF;
+  --v2: #0D7A4E;
+  --v2-bg: #EDFBF3;
+  --v3: #7C2D9E;
+  --v3-bg: #F6EFFE;
+  --trello: #0052CC;
+  --notion: #191919;
+  --warn: #C8522A;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--ink); font-family: 'Epilogue', sans-serif; font-size: 15px; line-height: 1.7; }
+
+/* NAV */
+.sticky-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(22,20,13,0.97);
+  backdrop-filter: blur(8px);
+  display: flex;
+  gap: 0;
+  padding: 0 2rem;
+  overflow-x: auto;
+  border-bottom: 1px solid #2A2820;
+}
+
+.nav-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #5A5850;
+  padding: 0.9rem 1.2rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.nav-btn:hover { color: #C0BCB4; }
+.nav-btn.active { color: #F0EDE6; border-bottom-color: #C8A84C; }
+
+/* SECTIONS */
+.section { display: none; animation: fadeUp 0.3s ease; }
+.section.active { display: block; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* HERO */
+.hero {
+  background: var(--ink);
+  padding: 4rem 3rem 3.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -80px; right: -80px;
+  width: 400px; height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(200,168,76,0.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+.hero-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #5A5850;
+  margin-bottom: 1rem;
+}
+.hero-title {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  color: #F0EDE6;
+  line-height: 1.05;
+  margin-bottom: 1.2rem;
+  max-width: 800px;
+}
+.hero-title em { font-style: italic; font-weight: 300; color: #C8A84C; }
+.hero-lead {
+  font-size: 1.05rem;
+  color: #7A7870;
+  max-width: 620px;
+  line-height: 1.7;
+  margin-bottom: 2.5rem;
+}
+.hero-stats {
+  display: flex;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+}
+.stat { text-align: left; }
+.stat-num {
+  font-family: 'Fraunces', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #F0EDE6;
+  line-height: 1;
+}
+.stat-label { font-size: 0.75rem; color: #5A5850; margin-top: 0.2rem; }
+
+/* CONTENT WRAPPER */
+.content { max-width: 920px; margin: 0 auto; padding: 3rem 2rem; }
+
+/* PROBLEM SECTION */
+.problem-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin: 2rem 0;
+}
+.problem-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.4rem;
+}
+.problem-card-icon { font-size: 1.6rem; margin-bottom: 0.7rem; }
+.problem-card-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.4rem; }
+.problem-card-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+/* SOLUTION PREVIEW */
+.solution-flow {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 2rem 0;
+}
+.flow-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+}
+.flow-steps {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.flow-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  text-align: center;
+}
+.flow-step-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.flow-step-sub { font-size: 0.62rem; color: var(--muted); }
+.flow-arrow-big { color: #CCC; font-size: 1.4rem; }
+
+.highlight-box {
+  background: #FFFBF0;
+  border: 1px solid #F0DFA0;
+  border-left: 4px solid #C8A84C;
+  border-radius: 6px;
+  padding: 1.1rem 1.4rem;
+  font-size: 0.85rem;
+  color: #5A4A00;
+  line-height: 1.65;
+  margin: 1.5rem 0;
+}
+
+/* SECTION HEADING */
+.section-h1 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  line-height: 1.15;
+}
+.section-lead {
+  font-size: 0.9rem;
+  color: var(--muted);
+  max-width: 600px;
+  margin-bottom: 2.5rem;
+  line-height: 1.65;
+}
+
+/* VARIANT DETAIL CARDS */
+.variant-full {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+.vf-header {
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.vf-header-left { flex: 1; }
+.vf-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 0.4rem;
+}
+.vf-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 0.3rem;
+}
+.vf-sub { font-size: 0.82rem; color: var(--muted); }
+
+.vf-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.vf-body {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 0;
+  border-top: 1px solid var(--border);
+}
+.vf-col {
+  padding: 1.5rem 2rem;
+  border-right: 1px solid var(--border);
+}
+.vf-col:last-child { border-right: none; }
+.vf-col-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* STEPS */
+.step-list { list-style: none; }
+.step-item {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+  align-items: flex-start;
+}
+.step-item:last-child { margin-bottom: 0; }
+.step-circle {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 500;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  color: white;
+}
+.step-text { font-size: 0.83rem; line-height: 1.6; color: var(--ink); }
+.step-note { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+
+/* IMPACT ITEMS */
+.impact-item {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  margin-bottom: 0.8rem;
+  font-size: 0.83rem;
+  line-height: 1.55;
+}
+.impact-icon { flex-shrink: 0; }
+
+/* CHAT MOCK */
+.chat-mock {
+  background: #F0F0F0;
+  border-radius: 12px;
+  padding: 1rem;
+  margin: 1rem 0;
+  font-size: 0.78rem;
+}
+.chat-msg {
+  background: white;
+  border-radius: 8px;
+  padding: 0.5rem 0.8rem;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+.chat-msg:last-child { margin-bottom: 0; }
+.chat-author { font-weight: 600; font-size: 0.7rem; color: var(--muted); margin-bottom: 0.15rem; }
+.chat-bot {
+  background: #E8F5E9;
+  border: 1px solid #C8E6C9;
+}
+.chat-bot .chat-author { color: var(--v2); }
+
+/* COST TABLE */
+.cost-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
+}
+.cost-row:last-child { border-bottom: none; font-weight: 600; }
+.cost-label { color: var(--muted); }
+.cost-val { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; }
+.free { color: var(--v2); }
+
+/* TRELLO vs NOTION */
+.tn-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+.tn-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.tn-header {
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.tn-logo {
+  font-family: 'Fraunces', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+.tn-tagline { font-size: 0.78rem; color: var(--muted); }
+.tn-body { padding: 1.2rem 1.5rem; }
+.tn-row {
+  display: flex;
+  gap: 0.6rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  margin-bottom: 0.6rem;
+  color: var(--ink);
+}
+.tn-row:last-child { margin-bottom: 0; }
+.tn-row span:first-child { flex-shrink: 0; }
+.tn-ideal {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 0.8rem 1.5rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.tn-ideal strong { color: var(--ink); }
+
+/* RECOMMENDATION PANEL */
+.rec-panel {
+  background: var(--ink);
+  border-radius: 14px;
+  padding: 2.5rem;
+  margin-top: 2rem;
+}
+.rec-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #5A5850;
+  margin-bottom: 0.8rem;
+}
+.rec-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.6rem;
+  color: #F0EDE6;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+}
+.rec-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.rec-card {
+  background: #1E1C14;
+  border: 1px solid #2A2820;
+  border-radius: 8px;
+  padding: 1.2rem;
+}
+.rec-card-title { font-size: 0.82rem; font-weight: 600; color: #D0CCC4; margin-bottom: 0.5rem; }
+.rec-card-body { font-size: 0.75rem; color: #6A6660; line-height: 1.6; }
+.rec-note {
+  font-size: 0.8rem;
+  color: #5A5850;
+  line-height: 1.7;
+  border-top: 1px solid #2A2820;
+  padding-top: 1.2rem;
+  font-style: italic;
+}
+
+/* FOOTER NAV */
+.section-footer {
+  background: var(--ink);
+  border-top: 1px solid #2A2820;
+  padding: 1.2rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.footer-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: none;
+  border: 1px solid #2A2820;
+  border-radius: 6px;
+  padding: 0.6rem 1.1rem;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6A6660;
+  transition: all 0.18s;
+}
+
+.footer-btn:hover {
+  border-color: #C8A84C;
+  color: #C8A84C;
+}
+
+.footer-btn.next {
+  background: #1E1C14;
+  color: #C0BCB4;
+  border-color: #3A3828;
+}
+
+.footer-btn.next:hover {
+  background: #2A2820;
+  color: #F0EDE6;
+  border-color: #C8A84C;
+}
+
+.footer-btn.disabled {
+  opacity: 0.25;
+  cursor: default;
+  pointer-events: none;
+}
+
+.footer-progress {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.fp-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #2A2820;
+  transition: background 0.2s;
+}
+
+.fp-dot.active { background: #C8A84C; }
+
+/* RESPONSIVE */
+@media (max-width: 700px) {
+  .content { padding: 2rem 1rem; }
+  .hero { padding: 2.5rem 1.2rem; }
+  .problem-cards, .vf-body, .tn-grid, .rec-grid { grid-template-columns: 1fr; }
+  .vf-col { border-right: none; border-bottom: 1px solid var(--border); }
+  .flow-steps { flex-direction: column; align-items: flex-start; }
+  .flow-arrow-big { transform: rotate(90deg); }
+}
+</style>
+</head>
+<body>
+
+<nav class="sticky-nav">
+  <button class="nav-btn active" onclick="show('problem')">Proč měnit?</button>
+  <button class="nav-btn" onclick="show('v1')">Varianta 1 · E-mail</button>
+  <button class="nav-btn" onclick="show('v2')">Varianta 2 · Telegram ⭐</button>
+  <button class="nav-btn" onclick="show('v3')">Varianta 3 · Teams/Slack</button>
+  <button class="nav-btn" onclick="show('tools')">Trello vs Notion</button>
+  <button class="nav-btn" onclick="show('summary')">Závěr</button>
+</nav>
+
+<!-- ======= PROBLEM ======= -->
+<div class="section active" id="problem">
+<div class="hero">
+  <div class="hero-tag">Analýza situace · tým 10 osob</div>
+  <h1 class="hero-title">Jak přestat <em>ztrácet úkoly</em><br>v chatu</h1>
+  <p class="hero-lead">Skupinový chat je skvělý nástroj pro rychlou komunikaci. Jenže úkoly, termíny a odpovědnosti v něm mizí pod náporem dalších zpráv. Tento dokument ukazuje tři cesty, jak to změnit — bez dramatického narušení toho, co v týmu funguje.</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">3</div><div class="stat-label">varianty řešení</div></div>
+    <div class="stat"><div class="stat-num">~230 Kč</div><div class="stat-label">max. náklad / měsíc</div></div>
+    <div class="stat"><div class="stat-num">0</div><div class="stat-label">nové aplikace pro tým<br>v doporuč. variantě</div></div>
+  </div>
+</div>
+
+<div class="content">
+  <h2 class="section-h1">Co nefunguje a proč</h2>
+  <p class="section-lead">Chat je přirozené místo pro rychlou domluvu. Ale stává se problémem ve chvíli, kdy v něm žijí i úkoly — protože chat není navržen na to, aby se v něm sledovalo, kdo co dělá a do kdy.</p>
+
+  <div class="problem-cards">
+    <div class="problem-card">
+      <div class="problem-card-icon">🌊</div>
+      <div class="problem-card-title">Úkoly se topí v konverzaci</div>
+      <div class="problem-card-desc">„Petr, mohl bys do pátku aktualizovat ceník?" — za hodinu to přejedou tři další zprávy a nikdo neví, jestli to Petr viděl, nebo ne.</div>
+    </div>
+    <div class="problem-card">
+      <div class="problem-card-icon">❓</div>
+      <div class="problem-card-title">Žádný přehled o stavu</div>
+      <div class="problem-card-desc">Není kde podívat: co se aktuálně řeší, co čeká, co je po termínu. Vedoucí musí aktivně dohledávat informace v historii chatu.</div>
+    </div>
+    <div class="problem-card">
+      <div class="problem-card-icon">🔁</div>
+      <div class="problem-card-title">Opakované dotazy</div>
+      <div class="problem-card-desc">„A jak to bylo s tou nabídkou pro XY?" — odpověď leží v chatu někde před čtrnácti dny. Zbytečná práce navíc pro všechny.</div>
+    </div>
+  </div>
+
+  <div class="solution-flow">
+    <div class="flow-title">Jak má situace vypadat po změně</div>
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="flow-step-box">💬 Kolega napíše zprávu</div>
+        <div class="flow-step-sub">jako dosud — v chatu</div>
+      </div>
+      <div class="flow-arrow-big">→</div>
+      <div class="flow-step">
+        <div class="flow-step-box">⚙️ Automatizace zachytí úkol</div>
+        <div class="flow-step-sub">Make.com na pozadí</div>
+      </div>
+      <div class="flow-arrow-big">→</div>
+      <div class="flow-step">
+        <div class="flow-step-box">📋 Karta v Trello / Notion</div>
+        <div class="flow-step-sub">s přiřazením + termínem</div>
+      </div>
+      <div class="flow-arrow-big">→</div>
+      <div class="flow-step">
+        <div class="flow-step-box">✅ Přehled pro vedení</div>
+        <div class="flow-step-sub">vždy aktuální, bez práce navíc</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight-box">
+    <strong>Klíčová myšlenka:</strong> Neměníme způsob, jak tým komunikuje — měníme jen to, <em>kde žijí úkoly</em>. Chat zůstane chatem. Úkoly dostanou své vlastní místo, kde jsou vidět, přiřazeny a sledovatelné.
+  </div>
+</div>
+</div>
+
+<!-- ======= V1: EMAIL ======= -->
+<div class="section" id="v1">
+<div class="hero" style="background:#0F2266">
+  <div class="hero-tag">Varianta 01 · nejnižší technická náročnost</div>
+  <h1 class="hero-title" style="font-size:clamp(1.8rem,4vw,2.8rem)">E-mail na sdílenou<br>schránku → úkol</h1>
+  <p class="hero-lead">Každý člen týmu, kdo chce zadat úkol, pošle krátký e-mail na jednu adresu. Automatizace ho přepíše do Trello nebo Notion. Žádná nová aplikace, žádné učení.</p>
+</div>
+
+<div class="content">
+  <div class="variant-full">
+    <div class="vf-header" style="background:var(--v1-bg)">
+      <div class="vf-header-left">
+        <div class="vf-num" style="color:var(--v1)">Varianta 01</div>
+        <div class="vf-title" style="color:var(--v1)">E-mail → Trello / Notion</div>
+        <div class="vf-sub">Sdílená schránka jako vstupní brána úkolů</div>
+      </div>
+      <span class="vf-badge" style="background:white;color:var(--v1);border:1px solid var(--v1-mid,#C7D4FA)">Nejjednodušší start</span>
+    </div>
+    <div class="vf-body">
+      <div class="vf-col">
+        <div class="vf-col-title">Jak to funguje v praxi</div>
+        <ul class="step-list">
+          <li class="step-item">
+            <div class="step-circle" style="background:var(--v1)">1</div>
+            <div>
+              <div class="step-text"><strong>Vytvořte sdílenou e-mailovou schránku</strong> — například <code style="background:#EEF2FF;padding:0.1rem 0.3rem;border-radius:3px;font-size:0.78rem">ukoly@vasa-firma.cz</code>. Tuto adresu sdílíte celému týmu.</div>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-circle" style="background:var(--v1)">2</div>
+            <div>
+              <div class="step-text"><strong>Kolega napíše krátký e-mail</strong> — předmět = název úkolu, tělo = popis. Chce-li úkol přiřadit Petrovi, napíše v těle „pro: Petr" nebo přidá Petra do kopie.</div>
+              <div class="step-note">Příklad: Předmět: „Aktualizovat ceník" · Tělo: „Prosím do pátku. pro: Jana"</div>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-circle" style="background:var(--v1)">3</div>
+            <div>
+              <div class="step-text"><strong>Make.com automaticky zpracuje e-mail</strong> — přečte předmět, tělo, případně datum. Volitelně může text přepsat přes AI, která rozpozná jméno osoby a termín.</div>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-circle" style="background:var(--v1)">4</div>
+            <div>
+              <div class="step-text"><strong>V Trello nebo Notion se vytvoří karta</strong> — s názvem z předmětu, popisem z těla, přiřazením a termínem. Odesílatel dostane potvrzení s odkazem.</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="vf-col">
+        <div class="vf-col-title">Co to přinese a co vyžaduje</div>
+        <div class="impact-item"><span class="impact-icon">✅</span><span><strong>Nulová změna pro tým</strong> — e-mail umí každý, nic se neinstaluje, žádné nové aplikace.</span></div>
+        <div class="impact-item"><span class="impact-icon">✅</span><span><strong>Funguje i pro externisty</strong> — stačí e-mailová adresa, nepotřebují přístup do žádného interního systému.</span></div>
+        <div class="impact-item"><span class="impact-icon">✅</span><span><strong>Nízká cena</strong> — Make.com ~230 Kč/měs., jinak vše zdarma.</span></div>
+        <div class="impact-item" style="margin-top:1rem"><span class="impact-icon">⚠️</span><span><strong>Vyšší třecí plocha</strong> — kolega musí opustit chat, otevřít e-mail a napsat. V praxi se stane, že na to zapomene.</span></div>
+        <div class="impact-item"><span class="impact-icon">⚠️</span><span><strong>Pomalejší</strong> — e-mail je méně okamžitý než zpráva v chatu.</span></div>
+
+        <div class="vf-col-title" style="margin-top:1.5rem">Náklady</div>
+        <div class="cost-row"><span class="cost-label">Make.com (Core)</span><span class="cost-val">~230 Kč/měs.</span></div>
+        <div class="cost-row"><span class="cost-label">Trello / Notion</span><span class="cost-val free">zdarma</span></div>
+        <div class="cost-row"><span class="cost-label">E-mailová schránka</span><span class="cost-val free">zdarma</span></div>
+        <div class="cost-row"><span class="cost-label"><strong>Celkem</strong></span><span class="cost-val"><strong>~230 Kč/měs.</strong></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ======= V2: TELEGRAM ======= -->
+<div class="section" id="v2">
+<div class="hero" style="background:#0A3D2B">
+  <div class="hero-tag">Varianta 02 · doporučená · nejmenší změna pro tým</div>
+  <h1 class="hero-title" style="font-size:clamp(1.8rem,4vw,2.8rem)">Telegram bot<br>→ úkol automaticky</h1>
+  <p class="hero-lead">Tým přejde z Messengeru na Telegram — vizuálně a funkčně prakticky identická aplikace. Bot v chatu sleduje zprávy označené jako úkoly a automaticky je přepisuje do Trello nebo Notion.</p>
+</div>
+
+<div class="content">
+
+  <div class="highlight-box" style="background:#EDFBF3;border-color:#B8EDD4;border-left-color:var(--v2);color:#0A3D2B">
+    <strong>Proč Telegram a ne Messenger?</strong> Facebook Messenger neumožňuje automaticky číst zprávy ze skupinového chatu — je to záměrné omezení od Mety. Telegram naopak má otevřené API přesně pro tento účel. Přechod trvá 5 minut — odeslání jednoho pozvacího odkazu.
+  </div>
+
+  <div class="variant-full">
+    <div class="vf-header" style="background:var(--v2-bg)">
+      <div class="vf-header-left">
+        <div class="vf-num" style="color:var(--v2)">Varianta 02</div>
+        <div class="vf-title" style="color:var(--v2)">Telegram Bot → Trello / Notion</div>
+        <div class="vf-sub">Chatová komunikace zůstává — bot pracuje na pozadí</div>
+      </div>
+      <span class="vf-badge" style="background:white;color:var(--v2);border:1px solid #B8EDD4">⭐ Doporučeno</span>
+    </div>
+    <div class="vf-body">
+      <div class="vf-col">
+        <div class="vf-col-title">Jak to funguje v praxi</div>
+        <ul class="step-list">
+          <li class="step-item">
+            <div class="step-circle" style="background:var(--v2)">1</div>
+            <div>
+              <div class="step-text"><strong>Tým přejde na Telegram</strong> — stáhnete aplikaci (zdarma, iOS/Android/PC), vytvoříte skupinu a přidáte všechny. Messenger skupina může zůstat pro přechodné období.</div>
+              <div class="step-note">Telegram vypadá a funguje prakticky stejně jako Messenger. Zprávy, fotky, soubory, hlasovky — vše funguje identicky.</div>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-circle" style="background:var(--v2)">2</div>
+            <div>
+              <div class="step-text"><strong>Do skupiny přidáte bota</strong> — bot se vytvoří přes @BotFather v Telegramu za 5 minut, zdarma. Bot v chatu „naslouchá", ale nezasahuje do normální konverzace.</div>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-circle" style="background:var(--v2)">3</div>
+            <div>
+              <div class="step-text"><strong>Kolega napíše do chatu jako vždy</strong> — ale pokud chce vytvořit úkol, začne zprávu slovem <code style="background:#EDFBF3;padding:0.1rem 0.3rem;border-radius:3px;font-size:0.78rem">!ukol</code> nebo označí zprávu speciálním emoji 🔖.</div>
+              <div class="step-note">Příklad zprávy: „!ukol Aktualizovat ceník @Jana do pátku"</div>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-circle" style="background:var(--v2)">4</div>
+            <div>
+              <div class="step-text"><strong>Bot okamžitě zareaguje v chatu</strong> — potvrdí, že úkol byl vytvořen, a pošle odkaz na kartu v Trello nebo Notion. Vše bez opuštění aplikace.</div>
+            </div>
+          </li>
+        </ul>
+
+        <div style="margin-top:1.5rem">
+          <div class="vf-col-title">Jak vypadá chat s botem</div>
+          <div class="chat-mock">
+            <div class="chat-msg">
+              <div class="chat-author">Jana</div>
+              Hele, nezapomeňte na nabídku pro Novák s.r.o.
+            </div>
+            <div class="chat-msg">
+              <div class="chat-author">Tomáš</div>
+              !ukol Připravit nabídku Novák s.r.o. @Petr do středy
+            </div>
+            <div class="chat-msg chat-bot">
+              <div class="chat-author">🤖 TaskBot</div>
+              ✅ Úkol vytvořen: <strong>Připravit nabídku Novák s.r.o.</strong><br>
+              Přiřazeno: Petr · Termín: středa<br>
+              → <span style="color:var(--v2);text-decoration:underline">Otevřít v Trello</span>
+            </div>
+            <div class="chat-msg">
+              <div class="chat-author">Petr</div>
+              👍
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="vf-col">
+        <div class="vf-col-title">Co to přinese a co vyžaduje</div>
+        <div class="impact-item"><span class="impact-icon">✅</span><span><strong>Nejmenší změna chování</strong> — kolegové píší do chatu stejně jako dřív. Jen jiná aplikace.</span></div>
+        <div class="impact-item"><span class="impact-icon">✅</span><span><strong>Okamžitá zpětná vazba</strong> — bot potvrdí úkol přímo v konverzaci do vteřiny.</span></div>
+        <div class="impact-item"><span class="impact-icon">✅</span><span><strong>Telegram je zdarma</strong> a bez reklam. API je stabilní a otevřené.</span></div>
+        <div class="impact-item"><span class="impact-icon">✅</span><span><strong>Funguje pro externisty</strong> — Telegram si každý stáhne za 2 minuty.</span></div>
+        <div class="impact-item"><span class="impact-icon">✅</span><span><strong>Normální zprávy bota nerušují</strong> — reaguje jen na označené zprávy.</span></div>
+        <div class="impact-item" style="margin-top:1rem"><span class="impact-icon">⚠️</span><span><strong>Migrace z Messengeru</strong> — vyžaduje souhlas týmu. V praxi jde o stažení jedné aplikace.</span></div>
+
+        <div class="vf-col-title" style="margin-top:1.5rem">Náklady</div>
+        <div class="cost-row"><span class="cost-label">Make.com (Core)</span><span class="cost-val">~230 Kč/měs.</span></div>
+        <div class="cost-row"><span class="cost-label">Telegram</span><span class="cost-val free">zdarma</span></div>
+        <div class="cost-row"><span class="cost-label">Trello / Notion</span><span class="cost-val free">zdarma</span></div>
+        <div class="cost-row"><span class="cost-label">Telegram Bot API</span><span class="cost-val free">zdarma</span></div>
+        <div class="cost-row"><span class="cost-label"><strong>Celkem</strong></span><span class="cost-val"><strong>~230 Kč/měs.</strong></span></div>
+
+        <div class="vf-col-title" style="margin-top:1.5rem">Čas nasazení</div>
+        <div class="cost-row"><span class="cost-label">Migrace skupiny</span><span class="cost-val">~30 minut</span></div>
+        <div class="cost-row"><span class="cost-label">Bot + Make scénář</span><span class="cost-val">~3 hodiny</span></div>
+        <div class="cost-row"><span class="cost-label">Testování</span><span class="cost-val">~1 hodina</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ======= V3: TEAMS ======= -->
+<div class="section" id="v3">
+<div class="hero" style="background:#2D1040">
+  <div class="hero-tag">Varianta 03 · nejkomplexnější · nejvyšší přínos</div>
+  <h1 class="hero-title" style="font-size:clamp(1.8rem,4vw,2.8rem)">Microsoft Teams / Slack<br>→ vše na jednom místě</h1>
+  <p class="hero-lead">Chat, úkoly, soubory i reporty sjednocené na jedné profesionální platformě. Teams je pravděpodobně součástí vaší stávající Microsoft 365 licence — tedy bez přidaných nákladů.</p>
+</div>
+
+<div class="content">
+  <div class="variant-full">
+    <div class="vf-header" style="background:var(--v3-bg)">
+      <div class="vf-header-left">
+        <div class="vf-num" style="color:var(--v3)">Varianta 03</div>
+        <div class="vf-title" style="color:var(--v3)">Microsoft Teams / Slack</div>
+        <div class="vf-sub">Profesionální platforma — chat, úkoly, reporty, soubory</div>
+      </div>
+      <span class="vf-badge" style="background:white;color:var(--v3);border:1px solid #DFC3F5">Vše v jednom</span>
+    </div>
+    <div class="vf-body">
+      <div class="vf-col">
+        <div class="vf-col-title">Jak to funguje v praxi</div>
+        <ul class="step-list">
+          <li class="step-item">
+            <div class="step-circle" style="background:var(--v3)">1</div>
+            <div>
+              <div class="step-text"><strong>Ověřte dostupnost Teams nebo Slacku.</strong> Microsoft Teams je součástí Microsoft 365 — pokud ho organizace platí (a většina středních firem ano), Teams jsou k dispozici zdarma.</div>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-circle" style="background:var(--v3)">2</div>
+            <div>
+              <div class="step-text"><strong>Vytvořte tým a kanály</strong> — například #obecné, #úkoly, #reporty. Každý kanál je samostatná konverzace, přehledně oddělená.</div>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-circle" style="background:var(--v3)">3</div>
+            <div>
+              <div class="step-text"><strong>Úkoly přímo z chatu</strong> — v Teams stačí najet na zprávu a kliknout „Vytvořit úkol" (nativní funkce). Zpráva se přepíše do Microsoft Planneru nebo Trella bez jakékoli automatizace.</div>
+              <div class="step-note">Toto jako jediná varianta nevyžaduje Make.com pro základní fungování.</div>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-circle" style="background:var(--v3)">4</div>
+            <div>
+              <div class="step-text"><strong>Make.com přidá chytrou vrstvu</strong> — měsíční reporty z Shoptetu, AI komentář, automatická připomínka blížících se termínů poslaná přímo do kanálu.</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="vf-col">
+        <div class="vf-col-title">Co to přinese a co vyžaduje</div>
+        <div class="impact-item"><span class="impact-icon">✅</span><span><strong>Jedno místo pro vše</strong> — chat, úkoly, sdílené soubory, reporty. Kolegové nemusí přepínat mezi aplikacemi.</span></div>
+        <div class="impact-item"><span class="impact-icon">✅</span><span><strong>Nativní vytváření úkolů</strong> — bez automatizace, přímo z Teams rozhraní.</span></div>
+        <div class="impact-item"><span class="impact-icon">✅</span><span><strong>Pravděpodobně bez přidaných nákladů</strong> — Teams je součástí M365.</span></div>
+        <div class="impact-item"><span class="impact-icon">✅</span><span><strong>Nejvyšší škálovatelnost</strong> — roste s týmem bez kompromisů.</span></div>
+        <div class="impact-item" style="margin-top:1rem"><span class="impact-icon">⚠️</span><span><strong>Větší změna pro tým</strong> — nová platforma, nové návyky. Vyžaduje pečlivější onboarding.</span></div>
+        <div class="impact-item"><span class="impact-icon">⚠️</span><span><strong>Externisté</strong> — potřebují pozvánku jako „guest" do Teams.</span></div>
+
+        <div class="vf-col-title" style="margin-top:1.5rem">Náklady (při M365)</div>
+        <div class="cost-row"><span class="cost-label">Microsoft Teams</span><span class="cost-val free">součást M365</span></div>
+        <div class="cost-row"><span class="cost-label">Make.com (volitelně)</span><span class="cost-val">0–230 Kč/měs.</span></div>
+        <div class="cost-row"><span class="cost-label">Trello / Notion</span><span class="cost-val free">zdarma</span></div>
+        <div class="cost-row"><span class="cost-label"><strong>Celkem</strong></span><span class="cost-val"><strong>0–230 Kč/měs.</strong></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ======= TOOLS ======= -->
+<div class="section" id="tools">
+<div class="hero" style="background:#1A1A1A">
+  <div class="hero-tag">Výběr nástroje pro správu úkolů</div>
+  <h1 class="hero-title" style="font-size:clamp(1.8rem,4vw,2.8rem)">Trello <em>nebo</em> Notion?</h1>
+  <p class="hero-lead">Obě platformy jsou zdarma pro malé týmy a obě se propojí s Make.com. Liší se filosofií — Trello je vizuální kanban tabule, Notion je flexibilní pracovní prostor.</p>
+</div>
+<div class="content">
+  <div class="tn-grid">
+    <div class="tn-card">
+      <div class="tn-header" style="border-left:4px solid var(--trello)">
+        <div class="tn-logo" style="color:var(--trello)">Trello</div>
+        <div class="tn-tagline">Vizuální kanban tabule · jednoduché a přehledné</div>
+      </div>
+      <div class="tn-body">
+        <div class="tn-row"><span>🎯</span><span><strong>Sloupy a karty</strong> — úkoly se přesouvají zleva doprava: To Do → Probíhá → Hotovo. Vizuálně okamžitě vidíte stav.</span></div>
+        <div class="tn-row"><span>⚡</span><span><strong>Rychlý start</strong> — během 10 minut máte funkční tabuli. Nic složitého, nikdo se nezaučuje.</span></div>
+        <div class="tn-row"><span>📱</span><span><strong>Skvělá mobilní aplikace</strong> — kolegové snadno přidají komentář nebo změní stav z telefonu.</span></div>
+        <div class="tn-row"><span>🔗</span><span><strong>Make.com modul</strong> — přímá integrace, vytvoření karty je otázka jednoho kroku.</span></div>
+        <div class="tn-row"><span>⚠️</span><span>Méně vhodné pro psaní dokumentů nebo složitější struktury — to je spíš doména Notionu.</span></div>
+      </div>
+      <div class="tn-ideal"><strong>Ideální pro:</strong> tým, který chce jednoduché vizuální sledování úkolů bez zbytečné složitosti.</div>
+    </div>
+    <div class="tn-card">
+      <div class="tn-header" style="border-left:4px solid var(--notion)">
+        <div class="tn-logo" style="color:var(--notion)">Notion</div>
+        <div class="tn-tagline">Flexibilní pracovní prostor · dokumenty + úkoly</div>
+      </div>
+      <div class="tn-body">
+        <div class="tn-row"><span>📚</span><span><strong>Úkoly i dokumenty na jednom místě</strong> — vedle správy úkolů můžete mít wiki, meeting notes, onboarding dokumenty.</span></div>
+        <div class="tn-row"><span>🔄</span><span><strong>Více pohledů na data</strong> — stejné úkoly lze zobrazit jako kanban, tabulku, seznam nebo kalendář.</span></div>
+        <div class="tn-row"><span>🤖</span><span><strong>Notion AI</strong> — zabudovaná AI pro psaní, shrnutí a práci s dokumenty (placená funkce).</span></div>
+        <div class="tn-row"><span>🔗</span><span><strong>Make.com modul</strong> — přímá integrace, vytvoření stránky/záznamu jednoduše.</span></div>
+        <div class="tn-row"><span>⚠️</span><span>Delší křivka učení — Notion je mocný, ale na začátek složitější než Trello.</span></div>
+      </div>
+      <div class="tn-ideal"><strong>Ideální pro:</strong> tým, který chce sjednotit úkoly, dokumentaci a interní znalosti na jednom místě.</div>
+    </div>
+  </div>
+
+  <div class="highlight-box">
+    <strong>Doporučení pro váš případ:</strong> Začněte s <strong>Trello</strong> — je rychlejší na nasazení a tým ho přijme bez odporu. Notion lze přidat kdykoli později, pokud tým pocítí potřebu pro dokumentaci a složitější strukturu. Obě platformy fungují ve Free verzi pro až 10 uživatelů.
+  </div>
+</div>
+</div>
+
+<!-- ======= SUMMARY ======= -->
+<div class="section" id="summary">
+<div class="hero">
+  <div class="hero-tag">Závěrečné srovnání a doporučení</div>
+  <h1 class="hero-title">Která varianta <em>pro vás</em>?</h1>
+  <p class="hero-lead">Každá varianta řeší stejný problém — liší se jen tím, kolik změny od týmu vyžaduje a co nabízí do budoucna.</p>
+</div>
+<div class="content">
+
+  <div style="background:white;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:2rem">
+    <table style="width:100%;border-collapse:collapse;font-size:0.82rem">
+      <thead>
+        <tr style="background:var(--bg)">
+          <th style="padding:0.8rem 1.2rem;text-align:left;font-family:'JetBrains Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);border-bottom:2px solid var(--border)">Kritérium</th>
+          <th style="padding:0.8rem 1.2rem;text-align:center;color:var(--v1);font-family:'JetBrains Mono',monospace;font-size:0.65rem;border-bottom:2px solid var(--border)">01 · E-mail</th>
+          <th style="padding:0.8rem 1.2rem;text-align:center;color:var(--v2);font-family:'JetBrains Mono',monospace;font-size:0.65rem;border-bottom:2px solid var(--border);background:#F5FDF8">02 · Telegram ⭐</th>
+          <th style="padding:0.8rem 1.2rem;text-align:center;color:var(--v3);font-family:'JetBrains Mono',monospace;font-size:0.65rem;border-bottom:2px solid var(--border)">03 · Teams/Slack</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="padding:0.7rem 1.2rem;border-bottom:1px solid var(--border);color:var(--muted)">Změna chování týmu</td><td style="text-align:center;border-bottom:1px solid var(--border)">Střední</td><td style="text-align:center;border-bottom:1px solid var(--border);background:#F5FDF8"><strong style="color:var(--v2)">Minimální</strong></td><td style="text-align:center;border-bottom:1px solid var(--border)">Větší</td></tr>
+        <tr><td style="padding:0.7rem 1.2rem;border-bottom:1px solid var(--border);color:var(--muted)">Rychlost nasazení</td><td style="text-align:center;border-bottom:1px solid var(--border)">2–3 hod.</td><td style="text-align:center;border-bottom:1px solid var(--border);background:#F5FDF8"><strong style="color:var(--v2)">3–4 hod.</strong></td><td style="text-align:center;border-bottom:1px solid var(--border)">4–8 hod.</td></tr>
+        <tr><td style="padding:0.7rem 1.2rem;border-bottom:1px solid var(--border);color:var(--muted)">Měsíční náklady</td><td style="text-align:center;border-bottom:1px solid var(--border)">~230 Kč</td><td style="text-align:center;border-bottom:1px solid var(--border);background:#F5FDF8"><strong style="color:var(--v2)">~230 Kč</strong></td><td style="text-align:center;border-bottom:1px solid var(--border)">0–230 Kč</td></tr>
+        <tr><td style="padding:0.7rem 1.2rem;border-bottom:1px solid var(--border);color:var(--muted)">Zpětná vazba v chatu</td><td style="text-align:center;border-bottom:1px solid var(--border)">E-mail</td><td style="text-align:center;border-bottom:1px solid var(--border);background:#F5FDF8"><strong style="color:var(--v2)">Okamžitě v chatu</strong></td><td style="text-align:center;border-bottom:1px solid var(--border)">V kanálu</td></tr>
+        <tr><td style="padding:0.7rem 1.2rem;border-bottom:1px solid var(--border);color:var(--muted)">Vhodné pro externisty</td><td style="text-align:center;border-bottom:1px solid var(--border)">✅</td><td style="text-align:center;border-bottom:1px solid var(--border);background:#F5FDF8">✅</td><td style="text-align:center;border-bottom:1px solid var(--border)">Částečně</td></tr>
+        <tr><td style="padding:0.7rem 1.2rem;color:var(--muted)">Škálovatelnost</td><td style="text-align:center">Nízká</td><td style="text-align:center;background:#F5FDF8">Střední</td><td style="text-align:center"><strong style="color:var(--v3)">Vysoká</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rec-panel">
+    <div class="rec-eyebrow">Závěrečné doporučení</div>
+    <div class="rec-title">Začněte s Variantou 02 — Telegram + Trello</div>
+    <div class="rec-grid">
+      <div class="rec-card">
+        <div class="rec-card-title" style="color:#7ADB8A">Proč Telegram</div>
+        <div class="rec-card-body">Tým píše do chatu jako dřív. Jen jiná aplikace — vizuálně a funkčně identická s Messengerem. Přechod trvá jednu schůzku.</div>
+      </div>
+      <div class="rec-card">
+        <div class="rec-card-title" style="color:#87CEEB">Proč Trello</div>
+        <div class="rec-card-body">Jednoduchá kanban tabule, srozumitelná bez školení. Free verze zvládne tým do 10 lidí bez omezení. Start do hodiny.</div>
+      </div>
+      <div class="rec-card">
+        <div class="rec-card-title" style="color:#DDA0DD">Proč Make.com</div>
+        <div class="rec-card-body">Propojovací vrstva — jeden scénář, ~230 Kč měsíčně. Žádná programátorská znalost nutná. Nasazení během odpoledne.</div>
+      </div>
+    </div>
+    <div class="rec-note">
+      Pokud se v budoucnu ukáže, že organizace disponuje licencí Microsoft 365, je přechod na Teams přirozeným dalším krokem — a veškerá logika v Make.com zůstane použitelná. Varianta 02 není slepou uličkou, ale dobrým výchozím bodem.
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+const tabs = ['problem','v1','v2','v3','tools','summary'];
+const tabLabels = ['Proč měnit?','Varianta 1 · E-mail','Varianta 2 · Telegram ⭐','Varianta 3 · Teams/Slack','Trello vs Notion','Závěr'];
+
+function show(id) {
+  tabs.forEach(t => {
+    document.getElementById(t).classList.toggle('active', t === id);
+  });
+  document.querySelectorAll('.nav-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', tabs[i] === id);
+  });
+  updateFooters(id);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateFooters(activeId) {
+  const idx = tabs.indexOf(activeId);
+  tabs.forEach((t, i) => {
+    const footer = document.getElementById('footer-' + t);
+    if (!footer) return;
+    // progress dots
+    const dots = footer.querySelectorAll('.fp-dot');
+    dots.forEach((d, di) => d.classList.toggle('active', di === i));
+    // prev button
+    const prevBtn = footer.querySelector('.footer-prev');
+    if (i === 0) {
+      prevBtn.classList.add('disabled');
+      prevBtn.textContent = '';
+    } else {
+      prevBtn.classList.remove('disabled');
+      prevBtn.textContent = '← ' + tabLabels[i - 1];
+      prevBtn.onclick = () => show(tabs[i - 1]);
+    }
+    // next button
+    const nextBtn = footer.querySelector('.footer-next');
+    if (i === tabs.length - 1) {
+      nextBtn.classList.add('disabled');
+      nextBtn.textContent = '';
+    } else {
+      nextBtn.classList.remove('disabled');
+      nextBtn.textContent = tabLabels[i + 1] + ' →';
+      nextBtn.onclick = () => show(tabs[i + 1]);
+    }
+  });
+}
+
+// Inject footers into each section
+tabs.forEach((t, i) => {
+  const section = document.getElementById(t);
+  if (!section) return;
+  const dotsHtml = tabs.map((_, di) =>
+    `<div class="fp-dot${di === i ? ' active' : ''}"></div>`
+  ).join('');
+  const prevLabel = i > 0 ? '← ' + tabLabels[i - 1] : '';
+  const nextLabel = i < tabs.length - 1 ? tabLabels[i + 1] + ' →' : '';
+  const footer = document.createElement('div');
+  footer.className = 'section-footer';
+  footer.id = 'footer-' + t;
+  footer.innerHTML = `
+    <button class="footer-btn footer-prev${i === 0 ? ' disabled' : ''}" ${i > 0 ? `onclick="show('${tabs[i-1]}')"` : ''}>${prevLabel}</button>
+    <div class="footer-progress">${dotsHtml}</div>
+    <button class="footer-btn next footer-next${i === tabs.length - 1 ? ' disabled' : ''}" ${i < tabs.length - 1 ? `onclick="show('${tabs[i+1]}')"` : ''}>${nextLabel}</button>
+  `;
+  section.appendChild(footer);
+});
+</script>
+</body>
+</html>
