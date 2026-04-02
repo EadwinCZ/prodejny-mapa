@@ -4,286 +4,281 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Pobočky – mapa</title>
-
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     html, body { height: 100%; margin: 0; }
     #map { height: 100vh; }
-
     .badge { display:inline-block; padding:.15rem .5rem; border-radius:999px; font-size:12px; }
-    .open   { background:#22c55e; }
-    .closed { background:#e2e2e2; }
-    .plan   { background:#e2e2e2; }
-
+    .open    { background:#22c55e; }
+    .closed  { background:#e2e2e2; }
+    .plan    { background:#e2e2e2; }
+    .special { background:#f59e0b; color:#fff; }
     .legend {
       position: absolute; z-index: 1000; right: 12px; top: 12px;
       background: rgba(255,255,255,.92); border-radius: 12px;
-      padding: 10px 12px; font: 14px/1.3 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      padding: 10px 12px; font: 14px/1.3 system-ui, sans-serif;
       box-shadow: 0 4px 18px rgba(0,0,0,.12);
     }
     .legend .row { display:flex; align-items:center; gap:8px; margin:6px 0; }
-    .dot { width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
-    .dot.open { background:#22c55e; }
-    .dot.closed { background:#0f0f0f; }
-    .dot.plan { background:transparent; outline: 2px dashed rgba(0,0,0,.25); outline-offset: 2px; }
+    .dot { width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 2px 8px rgba(0,0,0,.2); }
+    .dot.open    { background:#22c55e; }
+    .dot.closed  { background:#0f0f0f; }
+    .dot.special { background:#f59e0b; }
+    .dot.plan    { background:transparent; outline:2px dashed rgba(0,0,0,.25); outline-offset:2px; }
     a { color: #0b57d0; }
-  .branch-label{
-  background: rgba(255,255,255,.92);
-  border: 1px solid rgba(0,0,0,.08);
-  border-radius: 10px;
-  padding: 4px 8px;
-  font: 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  box-shadow: 0 6px 18px rgba(0,0,0,.12);
-  white-space: nowrap;
-  margin-top: 2.3px;
-}
-.branch-label.open   { border-color: rgba(34,197,94,.35); }
-.branch-label.closed { border-color: rgba(148,163,184,.50); }
-.branch-label.plan   { border-style: dashed; border-color: rgba(107,114,128,.45); }
-
-.leaflet-tooltip.branch-label:before{
-  border-right-color: rgba(255,255,255,.92);
-}
-
+    .branch-label {
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(0,0,0,.08);
+      border-radius: 10px;
+      padding: 4px 8px;
+      font: 14px/1.2 system-ui, sans-serif;
+      box-shadow: 0 6px 18px rgba(0,0,0,.12);
+      white-space: nowrap;
+      margin-top: 2.3px;
+    }
+    .branch-label.open    { border-color: rgba(34,197,94,.35); }
+    .branch-label.closed  { border-color: rgba(148,163,184,.50); }
+    .branch-label.special { border-color: rgba(245,158,11,.50); }
+    .branch-label.plan    { border-style: dashed; border-color: rgba(107,114,128,.45); }
+    .leaflet-tooltip.branch-label:before { border-right-color: rgba(255,255,255,.92); }
   </style>
 </head>
-
 <body>
   <div id="map"></div>
-
   <div class="legend">
     <strong>Pobočky</strong>
     <div class="row"><span class="dot open"></span> Otevřeno</div>
     <div class="row"><span class="dot closed"></span> Zavřeno</div>
+    <div class="row"><span class="dot special"></span> Speciální provoz</div>
     <div class="row"><span class="dot plan"></span> Plánuje se</div>
   </div>
-
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // ====== DATA POBOČEK ======
-    // URL podle tvého zadání: plodyzeme.cz/město (používám slug bez diakritiky)
-    const BASE_URL = "https://plodyzeme.cz/";
 
-    const branches = [
-      {
-        name: "Prodejna Trutnov",
-        city: "Trutnov",
-        addr: "Palackého 78, 541 01 Trutnov",
-        url: BASE_URL + "trutnov",
-        lat: 50.56075379808682, lng: 15.911718414822795,
-        hours: { po:"10:00-18:00", ut:"10:00-18:00", st:"10:00-18:00", ct:"10:00-18:00", pa:"10:00-18:00", so:"closed", ne:"closed" }
-      },
-      {
-        name: "Prodejna Náchod",
-        city: "Náchod",
-        addr: "Náchod – plánuje se",
-        url: BASE_URL + "nachod",
-        lat: 50.4167, lng: 16.1629, // střed města
-        planned: true
-      },
-      {
-        name: "Prodejna Hradec Králové",
-        city: "Hradec Králové",
-        addr: "Gočárova tř. 312/52, 500 02 Hradec Králové - připravujeme",
-        url: BASE_URL + "hradec-kralove",
-        lat: 50.21197053673083, lng: 15.810996169139326,
-        hours: { po:"10:00-18:00", ut:"10:00-18:00", st:"10:00-18:00", ct:"10:00-18:00", pa:"10:00-18:00", so:"closed", ne:"closed" }
-      },
-      {
-        name: "Prodejna Pardubice",
-        city: "Pardubice",
-        addr: "J. Palacha 1253, 530 02 Pardubice",
-        url: BASE_URL + "pardubice",
-        lat: 50.02578872364449, lng: 15.770669997737803,
-        hours: { po:"11:00-19:00", ut:"11:00-19:00", st:"11:00-19:00", ct:"11:00-19:00", pa:"11:00-19:00", so:"closed", ne:"closed" }
-      },
-      {
-        name: "Prodejna Chrudim",
-        city: "Chrudim",
-        addr: "Resselovo nám. 2, 537 01 Chrudim",
-        url: BASE_URL + "chrudim",
-        lat: 49.95178201451212, lng: 15.794964737952599,
-        hours: { po:"10:00-18:00", ut:"10:00-18:00", st:"10:00-18:00", ct:"10:00-18:00", pa:"10:00-18:00", so:"closed", ne:"closed" }
-      }
-    ];
+// ╔══════════════════════════════════════════════════════════════╗
+// ║           SPECIÁLNÍ OTEVÍRACÍ DOBY – SEM ZAPISOVAT          ║
+// ╠══════════════════════════════════════════════════════════════╣
+// ║  Každý záznam:                                               ║
+// ║  {                                                           ║
+// ║    date:  "RRRR-MM-DD",    ← datum (povinné)                ║
+// ║    label: "Název svátku",  ← zobrazí se v popupu            ║
+// ║    allClosed: true,        ← zavře VŠECHNY pobočky (opt.)   ║
+// ║    branches: {             ← přepis pro konkrétní pobočky   ║
+// ║      "klíč": { from:"HH:MM", to:"HH:MM" },                  ║
+// ║      "klíč": "closed"                                        ║
+// ║    }                                                         ║
+// ║  }                                                           ║
+// ╚══════════════════════════════════════════════════════════════╝
 
-    // ====== ČAS V EUROPE/PRAGUE ======
-    const weekdayKey = (wdShort) => {
-      // Intl cs-CZ vrací např. "po", "út", "st", "čt", "pá", "so", "ne"
-      // pro jistotu normalizace bez teček a do lowercase
-      const s = (wdShort || "").toLowerCase().replace(".", "");
-      if (s.startsWith("po")) return "po";
-      if (s.startsWith("út") || s.startsWith("ut")) return "ut";
-      if (s.startsWith("st")) return "st";
-      if (s.startsWith("čt") || s.startsWith("ct")) return "ct";
-      if (s.startsWith("pá") || s.startsWith("pa")) return "pa";
-      if (s.startsWith("so")) return "so";
-      if (s.startsWith("ne")) return "ne";
-      return "po";
-    };
+const SPECIAL_HOURS = [
 
-    function nowInPragueParts() {
-      const parts = new Intl.DateTimeFormat("cs-CZ", {
-        timeZone: "Europe/Prague",
-        hour: "2-digit",
-        minute: "2-digit",
-        weekday: "short",
-        hour12: false
-      }).formatToParts(new Date());
+  // --- VELKÝ PÁTEK 18. 4. 2025 ---
+  {
+    date:  "2025-04-18",
+    label: "Velký pátek",
+    branches: {
+      "hk":      { from: "10:00", to: "18:00" },
+      "trutnov": { from: "10:00", to: "18:00" },
+      "pce":     { from: "11:00", to: "19:00" },
+      "chrudim": "closed"
+    }
+  },
 
-      const get = (t) => parts.find(p => p.type === t)?.value;
+  // --- VELIKONOČNÍ PONDĚLÍ 21. 4. 2025 ---
+  {
+    date:  "2025-04-21",
+    label: "Velikonoční pondělí",
+    allClosed: true
+  },
+
+  // --- DALŠÍ SVÁTKY / VÝJIMKY ---
+  // {
+  //   date:  "2025-12-24",
+  //   label: "Štědrý den",
+  //   branches: {
+  //     "hk":      { from: "08:00", to: "12:00" },
+  //     "trutnov": { from: "08:00", to: "12:00" },
+  //     "pce":     { from: "08:00", to: "12:00" },
+  //     "chrudim": { from: "08:00", to: "12:00" }
+  //   }
+  // },
+
+];
+
+// ====== DATA POBOČEK ======
+const BASE_URL = "https://plodyzeme.cz/";
+
+const branches = [
+  {
+    key: "trutnov", name: "Prodejna Trutnov", city: "Trutnov",
+    addr: "Palackého 78, 541 01 Trutnov", url: BASE_URL + "trutnov",
+    lat: 50.56075379808682, lng: 15.911718414822795,
+    hours: { po:"10:00-18:00", ut:"10:00-18:00", st:"10:00-18:00", ct:"10:00-18:00", pa:"10:00-18:00", so:"closed", ne:"closed" }
+  },
+  {
+    key: "nachod", name: "Prodejna Náchod", city: "Náchod",
+    addr: "Náchod – plánuje se", url: BASE_URL + "nachod",
+    lat: 50.4167, lng: 16.1629, planned: true
+  },
+  {
+    key: "hk", name: "Prodejna Hradec Králové", city: "Hradec Králové",
+    addr: "Gočárova tř. 312/52, 500 02 Hradec Králové", url: BASE_URL + "hradec-kralove",
+    lat: 50.21197053673083, lng: 15.810996169139326,
+    hours: { po:"10:00-18:00", ut:"10:00-18:00", st:"10:00-18:00", ct:"10:00-18:00", pa:"10:00-18:00", so:"closed", ne:"closed" }
+  },
+  {
+    key: "pce", name: "Prodejna Pardubice", city: "Pardubice",
+    addr: "J. Palacha 1253, 530 02 Pardubice", url: BASE_URL + "pardubice",
+    lat: 50.02578872364449, lng: 15.770669997737803,
+    hours: { po:"11:00-19:00", ut:"11:00-19:00", st:"11:00-19:00", ct:"11:00-19:00", pa:"11:00-19:00", so:"closed", ne:"closed" }
+  },
+  {
+    key: "chrudim", name: "Prodejna Chrudim", city: "Chrudim",
+    addr: "Resselovo nám. 2, 537 01 Chrudim", url: BASE_URL + "chrudim",
+    lat: 49.95178201451212, lng: 15.794964737952599,
+    hours: { po:"10:00-18:00", ut:"10:00-18:00", st:"10:00-18:00", ct:"10:00-18:00", pa:"10:00-18:00", so:"closed", ne:"closed" }
+  }
+];
+
+// ====== ČASOVÉ FUNKCE ======
+function todayInPrague() {
+  return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Prague" }).format(new Date());
+}
+
+const weekdayKey = (wdShort) => {
+  const s = (wdShort || "").toLowerCase().replace(".", "");
+  if (s.startsWith("po")) return "po";
+  if (s.startsWith("út") || s.startsWith("ut")) return "ut";
+  if (s.startsWith("st")) return "st";
+  if (s.startsWith("čt") || s.startsWith("ct")) return "ct";
+  if (s.startsWith("pá") || s.startsWith("pa")) return "pa";
+  if (s.startsWith("so")) return "so";
+  if (s.startsWith("ne")) return "ne";
+  return "po";
+};
+
+function nowInPragueParts() {
+  const parts = new Intl.DateTimeFormat("cs-CZ", {
+    timeZone: "Europe/Prague", hour: "2-digit", minute: "2-digit", weekday: "short", hour12: false
+  }).formatToParts(new Date());
+  const get = (t) => parts.find(p => p.type === t)?.value;
+  return { hh: Number(get("hour")), mm: Number(get("minute")), wd: weekdayKey(get("weekday")) };
+}
+
+function checkTimeRange(from, to) {
+  const { hh, mm } = nowInPragueParts();
+  const [oh, om] = from.split(":").map(Number);
+  const [ch, cm] = to.split(":").map(Number);
+  const now = hh * 60 + mm, open = oh * 60 + om, close = ch * 60 + cm;
+  return (open <= close) ? (now >= open && now <= close) : (now >= open || now <= close);
+}
+
+// Vrátí { state, note, label? }
+// state: "open" | "closed" | "special-open" | "special-closed"
+function isOpenNow(b) {
+  if (!b.hours) return { state: "closed", note: "Bez otevíračky" };
+
+  const today = todayInPrague();
+  const special = SPECIAL_HOURS.find(s => s.date === today);
+
+  if (special) {
+    if (special.allClosed)
+      return { state: "special-closed", note: "Dnes zavřeno", label: special.label };
+    if (special.branches && b.key in special.branches) {
+      const rule = special.branches[b.key];
+      if (rule === "closed")
+        return { state: "special-closed", note: "Dnes zavřeno", label: special.label };
       return {
-        hh: Number(get("hour")),
-        mm: Number(get("minute")),
-        wd: weekdayKey(get("weekday"))
+        state: checkTimeRange(rule.from, rule.to) ? "special-open" : "special-closed",
+        note: rule.from + "–" + rule.to,
+        label: special.label
       };
     }
+  }
 
-    function isOpenNow(hoursByDay) {
-      if (!hoursByDay) return { state: "closed", note: "Bez otevíračky" };
+  const { wd } = nowInPragueParts();
+  const todayH = b.hours[wd];
+  if (!todayH || todayH === "closed") return { state: "closed", note: "Dnes zavřeno" };
+  const [openS, closeS] = todayH.split("-").map(s => s.trim());
+  return { state: checkTimeRange(openS, closeS) ? "open" : "closed", note: todayH };
+}
 
-      const { hh, mm, wd } = nowInPragueParts();
-      const today = hoursByDay[wd];
-      if (!today || today === "closed") return { state: "closed", note: "Dnes zavřeno" };
+// ====== IKONKY ======
+const SHOP_SVG = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block"><path d="M12 22s7-6.1 7-12a7 7 0 10-14 0c0 5.9 7 12 7 12z" fill="currentColor" fill-opacity="0.96" transform="rotate(-90 12 12)"/><circle cx="12" cy="10" r="2.4" fill="currentColor" fill-opacity="0.96"/></svg>';
 
-      const [openS, closeS] = today.split("-").map(s => s.trim());
-      const [oh, om] = openS.split(":").map(Number);
-      const [ch, cm] = closeS.split(":").map(Number);
-
-      const now = hh * 60 + mm;
-      const open = oh * 60 + om;
-      const close = ch * 60 + cm;
-
-      // (kdybys někdy měl otevíračku přes půlnoc, je tu podpora)
-      const openNow = (open <= close) ? (now >= open && now <= close) : (now >= open || now <= close);
-      return { state: openNow ? "open" : "closed", note: today };
-    }
-
-    // ====== IKONKY ======
-const SHOP_SVG = `
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
-     style="width:100%;height:100%;display:block">
-  <!-- minimalistický pin -->
-  <path d="M12 22s7-6.1 7-12a7 7 0 10-14 0c0 5.9 7 12 7 12z"
-        fill="currentColor" fill-opacity="0.96" transform="rotate(-90 12 12)"/>
-  <!-- vnitřní tečka -->
-    <circle cx="12" cy="10" r="2.4" fill="currentColor" fill-opacity="0.96"/>
-</svg>
-`.trim();
-
-function makeShopIcon({ bg, planned=false }) {
-  const size = 44;
-  const inner = 26;
-
-  const iconColor = planned ? "#000000" : "#ffffff"; // ← TADY SE TO LÁME
-
-  const dash = planned
-    ? "outline:2px dashed rgba(0,0,0,.28); outline-offset:2px;"
-    : "";
-
+function makeShopIcon({ bg, planned = false }) {
+  const size = 44, inner = 26;
+  const color = planned ? "#000" : "#fff";
+  const dash  = planned ? "outline:2px dashed rgba(0,0,0,.28);outline-offset:2px;" : "";
   return L.divIcon({
     className: "",
-    html: `
-      <div style="
-        width:${size}px;height:${size}px;border-radius:14px;
-        background:${bg};
-        display:flex;align-items:center;justify-content:center;
-        border:2px solid rgba(255,255,255,.95);
-        box-shadow:0 8px 22px rgba(0,0,0,.20);
-        ${dash}
-      ">
-        <div style="
-          width:${inner}px;height:${inner}px;
-          color:${iconColor};
-        ">
-          ${SHOP_SVG}
-        </div>
-      </div>
-    `,
-    iconSize: [size, size],
-    iconAnchor: [size/2, size/2],
-    popupAnchor: [0, -size/2]
+    html: '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:14px;background:' + bg + ';display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.95);box-shadow:0 8px 22px rgba(0,0,0,.20);' + dash + '"><div style="width:' + inner + 'px;height:' + inner + 'px;color:' + color + ';">' + SHOP_SVG + '</div></div>',
+    iconSize: [size, size], iconAnchor: [size/2, size/2], popupAnchor: [0, -size/2]
   });
 }
 
+const icons = {
+  "open":           makeShopIcon({ bg: "#22c55e" }),
+  "closed":         makeShopIcon({ bg: "#0f0f0f" }),
+  "special-open":   makeShopIcon({ bg: "#f59e0b" }),
+  "special-closed": makeShopIcon({ bg: "#f59e0b" }),
+  "planned":        makeShopIcon({ bg: "rgba(0,0,0,0)", planned: true })
+};
 
-// Definice ikon pro stavy
-const iconOpen   = makeShopIcon({ bg: "#22c55e" });
-const iconClosed = makeShopIcon({ bg: "#0f0f0f" });
-const iconPlanned = makeShopIcon({ bg: "#FF000000", planned: true });
-;
+function makePopup(b) {
+  if (b.planned)
+    return '<strong>' + b.name + '</strong><br/>' + b.addr + '<br/><span class="badge plan">Plánuje se</span><br/><a href="' + b.url + '" target="_blank" rel="noopener">Více informací</a>';
 
-    function makePopup(b) {
-      if (b.planned) {
-        return `
-          <strong>${b.name}</strong><br/>
-          ${b.addr}<br/>
-          <span class="badge plan">Plánuje se</span><br/>
-          <a href="${b.url}" target="_blank" rel="noopener">Více informací</a>
-        `;
-      }
+  const st = isOpenNow(b);
+  let badge, note;
+  if (st.state === "special-open") {
+    badge = '<span class="badge special">Speciální provoz</span>';
+    note  = st.label + ": " + st.note;
+  } else if (st.state === "special-closed") {
+    badge = '<span class="badge closed">Zavřeno</span>';
+    note  = st.label + ": zavřeno";
+  } else if (st.state === "open") {
+    badge = '<span class="badge open">Otevřeno</span>';
+    note  = st.note;
+  } else {
+    badge = '<span class="badge closed">Zavřeno</span>';
+    note  = st.note;
+  }
+  return '<strong>' + b.name + '</strong><br/>' + b.addr + '<br/>' + badge + ' <span style="font-size:12px;color:#555">(' + note + ')</span><br/><a href="' + b.url + '" target="_blank" rel="noopener">Více informací</a>';
+}
 
-      const st = isOpenNow(b.hours);
-      const badge = st.state === "open"
-        ? '<span class="badge open">Otevřeno</span>'
-        : '<span class="badge closed">Zavřeno</span>';
+function pickIcon(b) {
+  return b.planned ? icons.planned : (icons[isOpenNow(b).state] || icons.closed);
+}
 
-      return `
-        <strong>${b.name}</strong><br/>
-        ${b.addr}<br/>
-        ${badge} <span style="font-size:12px;color:#555">(${st.note})</span><br/>
-        <a href="${b.url}" target="_blank" rel="noopener">Více informací</a>
-      `;
-    }
+function tooltipClass(b) {
+  if (b.planned) return "plan";
+  const s = isOpenNow(b).state;
+  return s.startsWith("special") ? "special" : s;
+}
 
-    function pickIcon(b) {
-      if (b.planned) return iconPlanned;
-      const st = isOpenNow(b.hours);
-      return (st.state === "open") ? iconOpen : iconClosed;
-    }
+// ====== MAPA ======
+const map = L.map("map", { scrollWheelZoom: false }).setView([49.8175, 15.4730], 7);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom:19, attribution:"&copy; OpenStreetMap" }).addTo(map);
 
-    // ====== MAPA ======
-    const map = L.map("map", { scrollWheelZoom: false }).setView([49.8175, 15.4730], 7);
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "&copy; OpenStreetMap"
-    }).addTo(map);
-
-    const markers = [];
-    const bounds = [];
+const markers = [], bounds = [];
 
 branches.forEach(b => {
-  const icon = pickIcon(b);
-  const popup = makePopup(b);
-
-  const marker = L.marker([b.lat, b.lng], { icon })
-    .addTo(map)
-    .bindPopup(popup);
-
-  // label vedle ikonky
-  const stateClass = b.planned ? "plan" : (isOpenNow(b.hours).state); // "open" | "closed"
-  marker.bindTooltip(b.city || b.name, {
-    permanent: true,
-    direction: "right",
-    offset: [14, 0],
-    className: `branch-label ${stateClass}`
-  });
-
+  const marker = L.marker([b.lat, b.lng], { icon: pickIcon(b) }).addTo(map).bindPopup(makePopup(b));
+  marker.bindTooltip(b.city || b.name, { permanent:true, direction:"right", offset:[14,0], className:"branch-label " + tooltipClass(b) });
   markers.push({ b, marker });
   bounds.push([b.lat, b.lng]);
 });
 
+if (bounds.length) map.fitBounds(bounds, { padding: [30, 30] });
 
-    if (bounds.length) map.fitBounds(bounds, { padding: [30, 30] });
+setInterval(() => {
+  markers.forEach(({ b, marker }) => {
+    marker.setIcon(pickIcon(b));
+    marker.setPopupContent(makePopup(b));
+  });
+}, 60 * 1000);
 
-    // Přepočet stavů (otevřeno/zavřeno) každou minutu
-    setInterval(() => {
-      markers.forEach(({ b, marker }) => {
-        marker.setIcon(pickIcon(b));
-        marker.setPopupContent(makePopup(b));
-      });
-    }, 60 * 1000);
   </script>
 </body>
 </html>
