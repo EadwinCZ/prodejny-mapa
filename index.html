@@ -72,7 +72,7 @@
 
 const SPECIAL_HOURS = [
 
-  // --- VELKÝ PÁTEK 18. 4. 2025 ---
+  // --- VELKÝ PÁTEK 18. 4. 2026 ---
   {
     date:  "2026-04-18",
     label: "Velký pátek",
@@ -84,16 +84,39 @@ const SPECIAL_HOURS = [
     }
   },
 
-  // --- VELIKONOČNÍ PONDĚLÍ 21. 4. 2025 ---
+  // --- VELIKONOČNÍ PONDĚLÍ 21. 4. 2026 ---
   {
     date:  "2026-04-21",
     label: "Velikonoční pondělí",
     allClosed: true
   },
+  // --- inventura ---
+  {
+    date:  "2026-06-30",
+    label: "Mimořádná otevírací doba",
+    branches: {
+      "hk":      { from: "10:00", to: "18:00" },
+      "trutnov": { from: "09:00", to: "17:00" },
+      "pce":     { from: "11:00", to: "19:00" },
+      "chrudim": { from: "09:00", to: "17:00" }
+    }
+  },
 
+    // --- festival ---
+  {
+    date:  "2026-06-27",
+    label: "V sobotu v HK otevřeno",
+    branches: {
+      "hk":      { from: "10:00", to: "16:00" },
+      "trutnov": "closed",
+      "pce":     "closed",
+      "chrudim": "closed"
+    }
+  },
+  
   // --- DALŠÍ SVÁTKY / VÝJIMKY ---
   // {
-  //   date:  "2025-12-24",
+  //   date:  "2026-12-24",
   //   label: "Štědrý den",
   //   branches: {
   //     "hk":      { from: "08:00", to: "12:00" },
